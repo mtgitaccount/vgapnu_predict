@@ -1,0 +1,12 @@
+.pred_items {
+
+  list-style-type:none;
+}
+
+#ressourcePrediction {
+  padding-top: 8px;
+}
+
+.unload {
+  color: red;
+}
