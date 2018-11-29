@@ -157,7 +157,7 @@ function wrapper() { // wrapper for injection
         if (hit.mines != -1 && hit.isbase) { // hit.mines == -1 => unknown planet
           for (let i = 0; i < vgap.starbases.length; i++) {
             if (vgap.starbases[i].planetid == hit.id &&
-              vgap.starbases[i].mission == 4 && hit.ownerid != vgap.myplanets[1].ownerid) { // misson 4 => unload all freighters and bas is not own base
+              vgap.starbases[i].mission == 4 && hit.ownerid != vgap.race.id) { // misson 4 => unload all freighters and base is not own base
               //console.log("HIT has starbase and Starbasemission to 'unload'");
               checkunload = true;
               break;
