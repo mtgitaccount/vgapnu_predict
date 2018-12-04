@@ -416,7 +416,7 @@ function wrapper() { // wrapper for injection
           '</div>';
 
         //check existance of prediction container prevents multiple appends
-        if ($('#ressourcePrediction').length <= 0) $('#SelectLocation').append(html);
+        if ($('#ressourcePrediction').length <= 0) $('#SelectLocation').prepend(html);
 
 
       }
