@@ -708,6 +708,7 @@ function wrapper() { // wrapper for injection
 
     // register your plugin with NU
     vgap.registerPlugin(plugin, "Predict");
+    console.log( "Predict Plugin registered!");
 
   }
 
