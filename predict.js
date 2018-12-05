@@ -416,8 +416,10 @@ function wrapper() { // wrapper for injection
           '</div>';
 
         //check existance of prediction container prevents multiple appends
-        if ($('#ressourcePrediction').length <= 0) $('#SelectLocation').prepend(html);
+        //if ($('#ressourcePrediction').length <= 0) $('#SelectLocation').prepend(html);
+        if ($('#ressourcePrediction').length <= 0) $('#SelectLocation > div.childpane > #ScanTitle').after(html);
 
+        //$("#mydiv div:first-child").after(newDiv);
 
       }
 
