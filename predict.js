@@ -417,7 +417,13 @@ function wrapper() { // wrapper for injection
 
         //check existance of prediction container prevents multiple appends
         //if ($('#ressourcePrediction').length <= 0) $('#SelectLocation').prepend(html);
-        if ($('#ressourcePrediction').length <= 0) $('#SelectLocation > div.childpane > #ScanTitle').after(html);
+        if ($('#ressourcePrediction').length <= 0) {
+          //decide wether to put the prediction view on top or bottom of the SelectLocation div
+          if($('#SelectLocation > div.childpane').children().length > 9)
+            $('#SelectLocation > div.childpane > #ScanTitle').after(html);
+          else   $('#SelectLocation').append(html);
+          //console.log("Children: ", $('#SelectLocation > div.childpane').children().length);
+        }
 
         //$("#mydiv div:first-child").after(newDiv);
 
