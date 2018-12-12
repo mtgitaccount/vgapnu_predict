@@ -405,6 +405,16 @@ function wrapper() { // wrapper for injection
         prediction['mc'] += vgaPlanets.prototype.addOns.Predict.nativeTaxAmount(hit) + vgaPlanets.prototype.addOns.Predict.colonistTaxAmount(hit);
         checkunload ? punload['mc'] += vgaPlanets.prototype.addOns.Predict.nativeTaxAmount(hit) + vgaPlanets.prototype.addOns.Predict.colonistTaxAmount(hit) : null;
 
+        // indicator if ressource next turn on planet allow builing starbase
+        let base_alert = false;
+
+        if (prediction['mc'] >= 902 &&
+          prediction['D'] >= 120 &&
+          prediction['T'] >= 402 &&
+          prediction['M'] >= 340 ) {
+            base_alert =  true;
+          }
+
 
         let html = '<div id="ressourcePrediction">' + '<div class="ItemTitle">On Planet next turn</div>' +
           "<li class='pred_items'> mc: " + prediction['mc'] + punloadText(punload['mc'], checkunload) + "</li>" +
@@ -412,8 +422,8 @@ function wrapper() { // wrapper for injection
           "<li class='pred_items'> fuel: " + prediction['N'] + punloadText(punload['N'], checkunload) + "</li>" +
           "<li class='pred_items'> D: " + prediction['D'] + punloadText(punload['D'], checkunload) + "</li>" +
           "<li class='pred_items'> T: " + prediction['T'] + punloadText(punload['T'], checkunload) + "</li>" +
-          "<li class='pred_items'> M: " + prediction['M'] + punloadText(punload['M'], checkunload) + "</li>" +
-          '</div>';
+          "<li class='pred_items'> M: " + prediction['M'] + punloadText(punload['M'], checkunload);
+        html += base_alert ? "<span class='red'> BASE! </span>" : " " +"</li>" + '</div>';
 
         //check existance of prediction container prevents multiple appends
         //if ($('#ressourcePrediction').length <= 0) $('#SelectLocation').prepend(html);
@@ -425,7 +435,6 @@ function wrapper() { // wrapper for injection
           //console.log("Children: ", $('#SelectLocation > div.childpane').children().length);
         }
 
-        //$("#mydiv div:first-child").after(newDiv);
 
       }
 
