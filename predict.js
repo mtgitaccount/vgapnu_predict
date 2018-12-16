@@ -408,7 +408,7 @@ function wrapper() { // wrapper for injection
         // indicator if ressource next turn on planet allow builing starbase
         let base_alert = false;
 
-        if (prediction['mc'] >= 902 &&
+        if (prediction['mc'] +  prediction['sup'] >= 902 &&
           prediction['D'] >= 120 &&
           prediction['T'] >= 402 &&
           prediction['M'] >= 340 ) {
