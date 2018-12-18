@@ -423,7 +423,37 @@ function wrapper() { // wrapper for injection
           "<li class='pred_items'> D: " + prediction['D'] + punloadText(punload['D'], checkunload) + "</li>" +
           "<li class='pred_items'> T: " + prediction['T'] + punloadText(punload['T'], checkunload) + "</li>" +
           "<li class='pred_items'> M: " + prediction['M'] + punloadText(punload['M'], checkunload);
-        html += base_alert ? "<span class='red'> BASE! </span>" : " " +"</li>" + '</div>';
+        html += base_alert ? "<span class='red'> BASE! </span>" : " " +"</li>";
+
+        // claculate Ground combat rating
+        let maxdposts = 0;
+        let ground_defense_ratio = 0; // 1+(Planetary Defense Posts / 20)
+        let attackrace = vgap.player.raceid;
+        let defenserace = vgap.getPlayer(hit.ownerid).raceid;
+        let attackratio = 0;
+        let defenseratio = 0;
+
+
+        if (hit.clans < 50) {
+           maxdposts = hit.clans;
+        } else {
+           maxdposts = Math.trunc(50 + Math.sqrt(hit.clans-50));
+        }
+
+
+        if (attackrace == 2) attackratio = 30; //Lizards
+        else if (attackrace == 4) attackratio = 15; //
+        else attackratio = 1;
+
+        if (defenserace == 2) defenseratio = 15; //Lizards
+        else if (defenserace == 4) defenseratio = 5; //
+        else defenseratio = 1;
+
+        ground_defense_ratio = hit.clans * defenseratio * (1+ maxdposts*0.05);
+
+        html += "<li class='pred_items'>MaxD: " + maxdposts +" GC:"+ ground_defense_ratio + "</div>";
+
+        //console.log ("Ground Combat: ", hit.clans, maxdposts, ground_defense_ratio);
 
         //check existance of prediction container prevents multiple appends
         //if ($('#ressourcePrediction').length <= 0) $('#SelectLocation').prepend(html);
