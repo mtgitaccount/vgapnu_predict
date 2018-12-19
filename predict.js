@@ -405,6 +405,16 @@ function wrapper() { // wrapper for injection
         prediction['mc'] += vgaPlanets.prototype.addOns.Predict.nativeTaxAmount(hit) + vgaPlanets.prototype.addOns.Predict.colonistTaxAmount(hit);
         checkunload ? punload['mc'] += vgaPlanets.prototype.addOns.Predict.nativeTaxAmount(hit) + vgaPlanets.prototype.addOns.Predict.colonistTaxAmount(hit) : null;
 
+        // indicator if ressource next turn on planet allow builing starbase
+        let base_alert = false;
+
+        if (prediction['mc'] +  prediction['sup'] >= 902 &&
+          prediction['D'] >= 120 &&
+          prediction['T'] >= 402 &&
+          prediction['M'] >= 340 ) {
+            base_alert =  true;
+          }
+
 
         let html = '<div id="ressourcePrediction">' + '<div class="ItemTitle">On Planet next turn</div>' +
           "<li class='pred_items'> mc: " + prediction['mc'] + punloadText(punload['mc'], checkunload) + "</li>" +
@@ -412,11 +422,48 @@ function wrapper() { // wrapper for injection
           "<li class='pred_items'> fuel: " + prediction['N'] + punloadText(punload['N'], checkunload) + "</li>" +
           "<li class='pred_items'> D: " + prediction['D'] + punloadText(punload['D'], checkunload) + "</li>" +
           "<li class='pred_items'> T: " + prediction['T'] + punloadText(punload['T'], checkunload) + "</li>" +
-          "<li class='pred_items'> M: " + prediction['M'] + punloadText(punload['M'], checkunload) + "</li>" +
-          '</div>';
+          "<li class='pred_items'> M: " + prediction['M'] + punloadText(punload['M'], checkunload);
+        html += base_alert ? "<span class='red'> BASE! </span>" : " " +"</li>";
+
+        // claculate Ground combat rating
+        let maxdposts = 0;
+        let ground_defense_ratio = 0; // 1+(Planetary Defense Posts / 20)
+        let attackrace = vgap.player.raceid;
+        let defenserace = vgap.getPlayer(hit.ownerid).raceid;
+        let attackratio = 0;
+        let defenseratio = 0;
+
+
+        if (hit.clans < 50) {
+           maxdposts = hit.clans;
+        } else {
+           maxdposts = Math.trunc(50 + Math.sqrt(hit.clans-50));
+        }
+
+
+        if (attackrace == 2) attackratio = 30; //Lizards
+        else if (attackrace == 4) attackratio = 15; //
+        else attackratio = 1;
+
+        if (defenserace == 2) defenseratio = 15; //Lizards
+        else if (defenserace == 4) defenseratio = 5; //
+        else defenseratio = 1;
+
+        ground_defense_ratio = hit.clans * defenseratio * (1+ maxdposts*0.05);
+
+        html += "<li class='pred_items'>MaxD: " + maxdposts +" GC:"+ ground_defense_ratio + "</div>";
+
+        //console.log ("Ground Combat: ", hit.clans, maxdposts, ground_defense_ratio);
 
         //check existance of prediction container prevents multiple appends
-        if ($('#ressourcePrediction').length <= 0) $('#SelectLocation').prepend(html);
+        //if ($('#ressourcePrediction').length <= 0) $('#SelectLocation').prepend(html);
+        if ($('#ressourcePrediction').length <= 0) {
+          //decide wether to put the prediction view on top or bottom of the SelectLocation div
+          if($('#SelectLocation > div.childpane').children().length > 9)
+            $('#SelectLocation > div.childpane > #ScanTitle').after(html);
+          else   $('#SelectLocation').append(html);
+          //console.log("Children: ", $('#SelectLocation > div.childpane').children().length);
+        }
 
 
       }
