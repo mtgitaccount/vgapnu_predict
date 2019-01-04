@@ -466,6 +466,7 @@ function wrapper() { // wrapper for injection
         }
 
 
+
       }
 
     }
@@ -530,6 +531,10 @@ function wrapper() { // wrapper for injection
 
 
     //helper functions
+
+
+
+
     function shipCanReachPlanet(ship) {
 
       let dist = Math.dist(ship.targetx, ship.targety, ship.scanx, ship.scany);
