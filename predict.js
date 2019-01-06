@@ -170,7 +170,7 @@ function wrapper() { // wrapper for injection
         //console.log("Relevant Ships: ", relships);
 
 
-        //iterate through all ships
+        //iterate through all incoming ships
         for (let i = 0; i < relships.length; i++) {
           //console.log("Predict: checking ships", vgap.myships[i]);
           //let pl = vgap.warpWell(relships[i].targetx, relships[i].targety);
@@ -210,12 +210,13 @@ function wrapper() { // wrapper for injection
 
           //check if ship is cloned on a base
           var clone = null;
-          if (hit.ownerid == relships[i].ownerid && relships[i].friendlycode.toLowerCase() == "cln" && clone == null) {
+          if (hit.ownerid == relships[i].ownerid && relships[i].friendlycode.toLowerCase() == "cln"
+              && clone == null && relships[i].x == hit.x && relships[i].y == hit.y ) { //clone handling for ships orbiting hit planet and not targeting hit planet
             //assumes ships are in id order
             var check = vgap.cloneCheck(relships[i]);
             if (check.success) {
               clone = check;
-              //console.log("Cloning ship: ", check, vgap.myships[i].name );
+              //console.log("Cloning ship: ", check.duranium.val, check.megacredits.val, relships[i].name );
               //subtract cloning expenses
               prediction['mc'] -= check.megacredits.val;
               prediction['T'] -= check.tritanium.val;
@@ -319,16 +320,9 @@ function wrapper() { // wrapper for injection
               }
           }
 
-
-
-
-
-
-
-
           //        } //end ship prediction
 
-        } // iterate over relvant ships
+        } // iterate over relvant incoming ships
 
         prediction['mc'] += hit.megacredits > 0 ? hit.megacredits : 0;
         prediction['sup'] += hit.supplies > 0 ? hit.supplies : 0;
@@ -583,6 +577,10 @@ function wrapper() { // wrapper for injection
           if (vgap.myships[i].mission == 6) { //ship tows another ship
             result.push(vgap.getShip(vgap.myships[i].mission1target));
           }
+        }
+        // ship is cloned and over hit planet
+        if (vgap.myships[i].x == hit.x && vgap.myships[i].y == hit.y && vgap.myships[i].friendlycode.toLowerCase() == "cln") {
+             result.push(vgap.myships[i]);
         }
       }
       return result;
