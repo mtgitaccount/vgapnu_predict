@@ -170,7 +170,7 @@ function wrapper() { // wrapper for injection
         //console.log("Relevant Ships: ", relships);
 
 
-        //iterate through all ships
+        //iterate through all incoming ships
         for (let i = 0; i < relships.length; i++) {
           //console.log("Predict: checking ships", vgap.myships[i]);
           //let pl = vgap.warpWell(relships[i].targetx, relships[i].targety);
@@ -204,18 +204,49 @@ function wrapper() { // wrapper for injection
             punload['N'] += relships[i].neutronium;
           }
 
+         // check if ship is towed away from hit Planet
+         let tower = vgap.isTowTarget(relships[i].id);
+         let towaway = true;
+         if( tower != null){ //relship is beeing towed away from hit planet and outside warpell of hit planet
+            let towerTargetWarpwell = vgap.warpWell(tower.targetx, tower.targety);
+
+            if(towerTargetWarpwell != null){ //ship is beeing towed to warpwell
+              if (towerTargetWarpwell.x == hit.x && towerTargetWarpwell.y == hit.y){
+                towaway = false; //ship stays on hit planet
+              }
+            }
+            if ( towaway && tower.targetx != hit.x && tower.targety != hit.y) {
+
+                   prediction['sup'] -= relships[i].supplies;
+                   prediction['T'] -= relships[i].tritanium;
+                   prediction['M'] -= relships[i].molybdenum;
+                   prediction['D'] -= relships[i].duranium;
+                   prediction['N'] -= relships[i].neutronium;
+
+                   if (checkunload && relships[i].friendlycode === hit.friendlycode) {
+                     punload['sup'] -= relships[i].supplies;
+                     punload['T'] -= relships[i].tritanium;
+                     punload['M'] -= relships[i].molybdenum;
+                     punload['D'] -= relships[i].duranium;
+                     punload['N'] -= relships[i].neutronium;
+                   }
+                 }
+            //console.log("predict: ship towed away from HIT planet: ", relships[i].id);
+         }
+
 
 
 
 
           //check if ship is cloned on a base
           var clone = null;
-          if (hit.ownerid == relships[i].ownerid && relships[i].friendlycode.toLowerCase() == "cln" && clone == null) {
+          if (hit.ownerid == relships[i].ownerid && relships[i].friendlycode.toLowerCase() == "cln"
+              && clone == null && relships[i].x == hit.x && relships[i].y == hit.y ) { //clone handling for ships orbiting hit planet and not targeting hit planet
             //assumes ships are in id order
             var check = vgap.cloneCheck(relships[i]);
             if (check.success) {
               clone = check;
-              //console.log("Cloning ship: ", check, vgap.myships[i].name );
+              //console.log("Cloning ship: ", check.duranium.val, check.megacredits.val, relships[i].name );
               //subtract cloning expenses
               prediction['mc'] -= check.megacredits.val;
               prediction['T'] -= check.tritanium.val;
@@ -319,16 +350,9 @@ function wrapper() { // wrapper for injection
               }
           }
 
-
-
-
-
-
-
-
           //        } //end ship prediction
 
-        } // iterate over relvant ships
+        } // iterate over relvant incoming ships
 
         prediction['mc'] += hit.megacredits > 0 ? hit.megacredits : 0;
         prediction['sup'] += hit.supplies > 0 ? hit.supplies : 0;
@@ -583,6 +607,10 @@ function wrapper() { // wrapper for injection
           if (vgap.myships[i].mission == 6) { //ship tows another ship
             result.push(vgap.getShip(vgap.myships[i].mission1target));
           }
+        }
+        // ship is cloned and over hit planet
+        if (vgap.myships[i].x == hit.x && vgap.myships[i].y == hit.y && vgap.myships[i].friendlycode.toLowerCase() == "cln") {
+             result.push(vgap.myships[i]);
         }
       }
       return result;
