@@ -204,6 +204,36 @@ function wrapper() { // wrapper for injection
             punload['N'] += relships[i].neutronium;
           }
 
+         // check if ship is towed away from hit Planet
+         let tower = vgap.isTowTarget(relships[i].id);
+         let towaway = true;
+         if( tower != null){ //relship is beeing towed away from hit planet and outside warpell of hit planet
+            let towerTargetWarpwell = vgap.warpWell(tower.targetx, tower.targety);
+
+            if(towerTargetWarpwell != null){ //ship is beeing towed to warpwell
+              if (towerTargetWarpwell.x == hit.x && towerTargetWarpwell.y == hit.y){
+                towaway = false; //ship stays on hit planet
+              }
+            }
+            if ( towaway && tower.targetx != hit.x && tower.targety != hit.y) {
+
+                   prediction['sup'] -= relships[i].supplies;
+                   prediction['T'] -= relships[i].tritanium;
+                   prediction['M'] -= relships[i].molybdenum;
+                   prediction['D'] -= relships[i].duranium;
+                   prediction['N'] -= relships[i].neutronium;
+
+                   if (checkunload && relships[i].friendlycode === hit.friendlycode) {
+                     punload['sup'] -= relships[i].supplies;
+                     punload['T'] -= relships[i].tritanium;
+                     punload['M'] -= relships[i].molybdenum;
+                     punload['D'] -= relships[i].duranium;
+                     punload['N'] -= relships[i].neutronium;
+                   }
+                 }
+            //console.log("predict: ship towed away from HIT planet: ", relships[i].id);
+         }
+
 
 
 
