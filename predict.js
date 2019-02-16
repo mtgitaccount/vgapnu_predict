@@ -157,8 +157,8 @@ function wrapper() { // wrapper for injection
         if (hit.mines != -1 && hit.isbase) { // hit.mines == -1 => unknown planet
           for (let i = 0; i < vgap.starbases.length; i++) {
             if (vgap.starbases[i].planetid == hit.id &&
-              vgap.starbases[i].mission == 4 && hit.ownerid != vgap.race.id) { // misson 4 => unload all freighters and base is not own base
-              //console.log("HIT has starbase and Starbasemission to 'unload'");
+              vgap.starbases[i].mission == 4 && hit.ownerid != vgap.player.id) { // misson 4 => unload all freighters and base is not own base
+              //console.log("HIT has starbase and Starbasemission to 'unload'", hit.ownerid, vgap.race.id);
               checkunload = true;
               break;
             }
@@ -222,6 +222,7 @@ function wrapper() { // wrapper for injection
                    prediction['M'] -= relships[i].molybdenum;
                    prediction['D'] -= relships[i].duranium;
                    prediction['N'] -= relships[i].neutronium;
+                   prediction['mc'] -= relships[i].megacredits;
 
                    if (checkunload && relships[i].friendlycode === hit.friendlycode) {
                      punload['sup'] -= relships[i].supplies;
@@ -229,6 +230,7 @@ function wrapper() { // wrapper for injection
                      punload['M'] -= relships[i].molybdenum;
                      punload['D'] -= relships[i].duranium;
                      punload['N'] -= relships[i].neutronium;
+                     punload['mc'] -= relships[i].megacredits;
                    }
                  }
             //console.log("predict: ship towed away from HIT planet: ", relships[i].id);
@@ -246,7 +248,7 @@ function wrapper() { // wrapper for injection
             var check = vgap.cloneCheck(relships[i]);
             if (check.success) {
               clone = check;
-              //console.log("Cloning ship: ", check.duranium.val, check.megacredits.val, relships[i].name );
+              console.log("Cloning ship: ", check.duranium.val, check.megacredits.val, relships[i].name );
               //subtract cloning expenses
               prediction['mc'] -= check.megacredits.val;
               prediction['T'] -= check.tritanium.val;
