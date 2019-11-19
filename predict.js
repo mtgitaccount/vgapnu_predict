@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name          Planets.nu map drawing
-// @description   Allows marking up map with circles, lines, points, and text
+// @name          Planets.nu addon mineral prediction
+// @description   Predicts amount of minerals, mc, sup on a planet the following turn
 // @include       http://planets.nu/home
 // @include       http://planets.nu/games/*
 // @include       http://*.planets.nu/*
@@ -8,29 +8,7 @@
 // @version 1
 // ==/UserScript==
 
-/*------------------------------------------------------------------------------
-Creates 2 new map tools:
 
-"Draw" - Allows drawing various things on map. Once "Draw" is selected, clicks
-    on the map will draw instead of accessing ships, setting waypoints etc.
-    You can also use the options at top to create/rename/delete separate layers
-    to organize your drawn objects. To exit "Draw" mode, click "Starmap".
-
-"Layers" - Brings up a list of all the layers you have created with the "Draw"
-    tool above. Each has a checkbox which can be used to show or hide that
-    particular layer.
-
-NOTE: "snap waypoints" under the point settings will override snapping to other
-    ships' waypoints, if a click is near both.
-
-(ver 0.6) fix for client vgap2.js ver 1.30
-(ver 0.7) fix for using time machine
-(ver 0.7) patch for changes to note color functions
-(ver 0.8) fixes color selector box size
-(ver 0.9) fixes new color box position issue
-(ver 0.10)adds basic editing tools
-(ver 0.13)update for new .nu version (3+)
-------------------------------------------------------------------------------*/
 
 
 function wrapper() { // wrapper for injection
@@ -204,37 +182,37 @@ function wrapper() { // wrapper for injection
             punload['N'] += relships[i].neutronium;
           }
 
-         // check if ship is towed away from hit Planet
-         let tower = vgap.isTowTarget(relships[i].id);
-         let towaway = true;
-         if( tower != null){ //relship is beeing towed away from hit planet and outside warpell of hit planet
+          // check if ship is towed away from hit Planet
+          let tower = vgap.isTowTarget(relships[i].id);
+          let towaway = true;
+          if (tower != null) { //relship is beeing towed away from hit planet and outside warpell of hit planet
             let towerTargetWarpwell = vgap.warpWell(tower.targetx, tower.targety);
 
-            if(towerTargetWarpwell != null){ //ship is beeing towed to warpwell
-              if (towerTargetWarpwell.x == hit.x && towerTargetWarpwell.y == hit.y){
+            if (towerTargetWarpwell != null) { //ship is beeing towed to warpwell
+              if (towerTargetWarpwell.x == hit.x && towerTargetWarpwell.y == hit.y) {
                 towaway = false; //ship stays on hit planet
               }
             }
-            if ( towaway && tower.targetx != hit.x && tower.targety != hit.y) {
+            if (towaway && tower.targetx != hit.x && tower.targety != hit.y) {
 
-                   prediction['sup'] -= relships[i].supplies;
-                   prediction['T'] -= relships[i].tritanium;
-                   prediction['M'] -= relships[i].molybdenum;
-                   prediction['D'] -= relships[i].duranium;
-                   prediction['N'] -= relships[i].neutronium;
-                   prediction['mc'] -= relships[i].megacredits;
+              prediction['sup'] -= relships[i].supplies;
+              prediction['T'] -= relships[i].tritanium;
+              prediction['M'] -= relships[i].molybdenum;
+              prediction['D'] -= relships[i].duranium;
+              prediction['N'] -= relships[i].neutronium;
+              prediction['mc'] -= relships[i].megacredits;
 
-                   if (checkunload && relships[i].friendlycode === hit.friendlycode) {
-                     punload['sup'] -= relships[i].supplies;
-                     punload['T'] -= relships[i].tritanium;
-                     punload['M'] -= relships[i].molybdenum;
-                     punload['D'] -= relships[i].duranium;
-                     punload['N'] -= relships[i].neutronium;
-                     punload['mc'] -= relships[i].megacredits;
-                   }
-                 }
+              if (checkunload && relships[i].friendlycode === hit.friendlycode) {
+                punload['sup'] -= relships[i].supplies;
+                punload['T'] -= relships[i].tritanium;
+                punload['M'] -= relships[i].molybdenum;
+                punload['D'] -= relships[i].duranium;
+                punload['N'] -= relships[i].neutronium;
+                punload['mc'] -= relships[i].megacredits;
+              }
+            }
             //console.log("predict: ship towed away from HIT planet: ", relships[i].id);
-         }
+          }
 
 
 
@@ -242,13 +220,13 @@ function wrapper() { // wrapper for injection
 
           //check if ship is cloned on a base
           var clone = null;
-          if (hit.ownerid == relships[i].ownerid && relships[i].friendlycode.toLowerCase() == "cln"
-              && clone == null && relships[i].x == hit.x && relships[i].y == hit.y ) { //clone handling for ships orbiting hit planet and not targeting hit planet
+          if (hit.ownerid == relships[i].ownerid && relships[i].friendlycode.toLowerCase() == "cln" &&
+            clone == null && relships[i].x == hit.x && relships[i].y == hit.y) { //clone handling for ships orbiting hit planet and not targeting hit planet
             //assumes ships are in id order
             var check = vgap.cloneCheck(relships[i]);
             if (check.success) {
               clone = check;
-              console.log("Cloning ship: ", check.duranium.val, check.megacredits.val, relships[i].name );
+              console.log("Cloning ship: ", check.duranium.val, check.megacredits.val, relships[i].name);
               //subtract cloning expenses
               prediction['mc'] -= check.megacredits.val;
               prediction['T'] -= check.tritanium.val;
@@ -293,63 +271,82 @@ function wrapper() { // wrapper for injection
 
           //build fighters
           var builtfighters = 0;
-          if ((relships[i].friendlycode.toUpperCase() == "LFM") || ((relships[i].ownerid == 9 || relships[i].ownerid == 11) && relships[i].mission == 8) || relships[i].ownerid == 10) {
-            builtfighters = Math.min(Math.floor((relships[i].molybdenum) / 2), Math.floor((relships[i].tritanium) / 3), Math.floor((relships[i].supplies) / 5));
+
+          var creditsorsupplies = "supplies";
+          var cors = "sup;"
+          if (!vgap.gameUsesSupplies()) {
+            cargocost = 5;
+            creditsorsupplies = "megacredits";
+            cors = "mc"
+          }
+
+          if ((relships[i].friendlycode.toUpperCase() == "LFM") && relships[i].bays > 0 && vgap.player.raceid > 8 && relships[i].neutronium > 0) {
+            //console.log("build fighters: " + relships[i][creditsorsupplies] );
+            builtfighters = Math.min(
+              Math.floor((relships[i].molybdenum) / 2),
+              Math.floor((relships[i].tritanium) / 3),
+              Math.floor((relships[i][creditsorsupplies]) / 5));
             if (builtfighters > 0) {
               prediction['M'] -= builtfighters * 2;
               prediction['T'] -= builtfighters * 3;
-              prediction['sup'] -= builtfighters * 5;
+              prediction[cors] -= builtfighters * 5;
 
-              if (checkunload && relships[i].friendlycode === hit.friendlycode) {
-                punload['M'] -= builtfighters * 2;
-                punload['T'] -= builtfighters * 3;
-                punload['sup'] -= builtfighters * 5;
-              }
+              //lfm 12. unload 44.
+              //if (checkunload && relships[i].friendlycode === hit.friendlycode) {
+              //  punload['M'] -= builtfighters * 2;
+              //  punload['T'] -= builtfighters * 3;
+              //  punload['sup'] -= builtfighters * 5;
+              //}
+
             }
+          }
+
+          // LFM handling
+          if (relships[i].bays > 0 && vgap.player.raceid > 8 && relships[i].neutronium > 0) {
+            //  console.log("HANDLE LFM******************");
+            //lfmHandling(relships[i]);
           }
 
 
           //alchemy
-          if (relships[i].hullid == 105 && relships[i].friendlycode.toLowerCase() != "nal")
-          {
-              if (vgap.settings.fcodesextraalchemy && (relships[i].friendlycode.toLowerCase() == "nad" || relships[i].friendlycode.toLowerCase() == "nat" || relships[i].friendlycode.toLowerCase() == "nam")) {
-                  var alchemy = Math.floor((relships[i].supplies) / 6);
-                  prediction['sup']-=6*alchemy;
-                  switch (relships[i].friendlycode.toLowerCase()) {
-                      case "nad":
-                          prediction['M'] += alchemy;
-                          prediction['T'] += alchemy;
-                          break;
-                      case "nat":
-                          prediction['D'] += alchemy;
-                          prediction['M'] += alchemy;
-                          break;
-                      case "nam":
-                          prediction['D'] += alchemy;
-                          prediction['T'] += alchemy;
-                          break;
-                  }
+          if (relships[i].hullid == 105 && relships[i].friendlycode.toLowerCase() != "nal") {
+            if (vgap.settings.fcodesextraalchemy && (relships[i].friendlycode.toLowerCase() == "nad" || relships[i].friendlycode.toLowerCase() == "nat" || relships[i].friendlycode.toLowerCase() == "nam")) {
+              var alchemy = Math.floor((relships[i].supplies) / 6);
+              prediction['sup'] -= 6 * alchemy;
+              switch (relships[i].friendlycode.toLowerCase()) {
+                case "nad":
+                  prediction['M'] += alchemy;
+                  prediction['T'] += alchemy;
+                  break;
+                case "nat":
+                  prediction['D'] += alchemy;
+                  prediction['M'] += alchemy;
+                  break;
+                case "nam":
+                  prediction['D'] += alchemy;
+                  prediction['T'] += alchemy;
+                  break;
               }
-              else {
-                  var alchemy=Math.floor((relships[i].supplies) / 9);
-                  prediction['sup']-=9*alchemy;
-                  switch (relships[i].friendlycode.toLowerCase()) {
-                      case "ald":
-                          prediction['D']+=3*alchemy;
-                          break;
-                      case "alt":
-                          prediction['T']+=3*alchemy;
-                          break;
-                      case "alm":
-                          prediction['M']+=3*alchemy;
-                          break;
-                      default:
-                          prediction['D']+=alchemy;
-                          prediction['T']+=alchemy;
-                          prediction['M']+=alchemy;
-                          break;
-                  }
+            } else {
+              var alchemy = Math.floor((relships[i].supplies) / 9);
+              prediction['sup'] -= 9 * alchemy;
+              switch (relships[i].friendlycode.toLowerCase()) {
+                case "ald":
+                  prediction['D'] += 3 * alchemy;
+                  break;
+                case "alt":
+                  prediction['T'] += 3 * alchemy;
+                  break;
+                case "alm":
+                  prediction['M'] += 3 * alchemy;
+                  break;
+                default:
+                  prediction['D'] += alchemy;
+                  prediction['T'] += alchemy;
+                  prediction['M'] += alchemy;
+                  break;
               }
+            }
           }
 
           //        } //end ship prediction
@@ -434,12 +431,15 @@ function wrapper() { // wrapper for injection
         // indicator if ressource next turn on planet allow builing starbase
         let base_alert = false;
 
-        if (prediction['mc'] +  prediction['sup'] >= 902 &&
+        if (prediction['mc'] + prediction['sup'] >= 902 &&
           prediction['D'] >= 120 &&
           prediction['T'] >= 402 &&
-          prediction['M'] >= 340 ) {
-            base_alert =  true;
-          }
+          prediction['M'] >= 340) {
+          base_alert = true;
+        }
+
+
+
 
 
         let html = '<div id="ressourcePrediction">' + '<div class="ItemTitle">On Planet next turn</div>' +
@@ -449,7 +449,7 @@ function wrapper() { // wrapper for injection
           "<li class='pred_items'> D: " + prediction['D'] + punloadText(punload['D'], checkunload) + "</li>" +
           "<li class='pred_items'> T: " + prediction['T'] + punloadText(punload['T'], checkunload) + "</li>" +
           "<li class='pred_items'> M: " + prediction['M'] + punloadText(punload['M'], checkunload);
-        html += base_alert ? "<span class='red'> BASE! </span>" : " " +"</li>";
+        html += base_alert ? "<span class='red'> BASE! </span>" : " " + "</li>";
 
         // claculate Ground combat rating
         let maxdposts = 0;
@@ -461,32 +461,33 @@ function wrapper() { // wrapper for injection
 
 
         if (hit.clans < 50) {
-           maxdposts = hit.clans;
+          maxdposts = hit.clans;
         } else {
-           maxdposts = Math.trunc(50 + Math.sqrt(hit.clans-50));
+          maxdposts = Math.trunc(50 + Math.sqrt(hit.clans - 50));
         }
 
 
         if (attackrace == 2) attackratio = 30; //Lizards
-        else if (attackrace == 4) attackratio = 15; //
+        else if (attackrace == 4) attackratio = 15; // Klingon
         else attackratio = 1;
 
-        if (defenserace == 2) defenseratio = 15; //Lizards
-        else if (defenserace == 4) defenseratio = 5; //
+        if (defenserace == 2) defenseratio = 15; // Lizards
+        else if (defenserace == 4) defenseratio = 5; // Klingon
         else defenseratio = 1;
 
-        ground_defense_ratio = hit.clans * defenseratio * (1+ maxdposts*0.05);
+        ground_defense_ratio = hit.clans * defenseratio * (1 + maxdposts * 0.05);
 
-        html += "<li class='pred_items'>MaxD: " + maxdposts +" GC:"+ ground_defense_ratio + "</div>";
+        html += "<li class='pred_items'>MaxD: " + maxdposts + " GC:" + addCommas(ground_defense_ratio.toFixed(2)) + "</div>";
+        html += "<li class='pred_items'>KillClans: <span class='red'>" + addCommas( (ground_defense_ratio / attackratio).toFixed(2)) + "</span></div>";
 
-        //console.log ("Ground Combat: ", hit.clans, maxdposts, ground_defense_ratio);
+        //console.log ("Ground Combat: ", attackrace, defenserace, hit.clans, maxdposts, ground_defense_ratio);
 
         //check existance of prediction container prevents multiple appends
         //if ($('#ressourcePrediction').length <= 0) $('#SelectLocation').prepend(html);
         if ($('#ressourcePrediction').length <= 0) {
           //decide wether to put the prediction view on top or bottom of the SelectLocation div
           //if($('#SelectLocation > div.childpane').children().length > 9)
-            $('#SelectLocation > div.childpane > #ScanTitle').after(html); // predict always on top
+          $('#SelectLocation > div.childpane > #ScanTitle').after(html); // predict always on top
           //else   $('#SelectLocation').append(html);
           //console.log("Children: ", $('#SelectLocation > div.childpane').children().length);
         }
@@ -559,6 +560,70 @@ function wrapper() { // wrapper for injection
     //helper functions
 
 
+   //addCommas(1000)   => 1,000
+    function addCommas(nStr) {
+      nStr += '';
+      x = nStr.split('.');
+      x1 = x[0];
+      x2 = x.length > 1 ? '.' + x[1] : '';
+      var rgx = /(\d+)(\d{3})/;
+      while (rgx.test(x1)) {
+        x1 = x1.replace(rgx, '$1' + ',' + '$2');
+      }
+      return x1 + x2;
+    }
+
+
+    function lfmHandling(ship) {
+
+      var result = {
+        ammo: 0,
+        supplies: 0,
+        neutronium: 0,
+        duranium: 0,
+        tritanium: 0,
+        molybdenum: 0,
+        megacredits: 0,
+        damage: 0,
+        crew: 0,
+        cargo: 0
+      };
+
+      if (ship.bays > 0 && vgap.player.raceid > 8 && ship.neutronium > 0) {
+        var race = vgap.player.raceid;
+        var loadedfighters = 0;
+        //load
+        if (planet != null && planet.ownerid == vgap.player.id && ship.friendlycode.toUpperCase() == "LFM") {
+          loadedfighters = Math.min(Math.floor(planet.molybdenum / 2),
+            Math.floor(planet.tritanium / 3),
+            Math.floor(planet.supplies / 5),
+            Math.floor((hull.cargo - vgap.shipScreen.getTotalCargo(ship) - result.cargo) / 10));
+          console.log("lfmHandling: Total Ship Cargo" + vgap.shipScreen.getTotalCargo(ship));
+          if (loadedfighters > 0) {
+            result.molybdenum += loadedfighters * 2;
+            result.tritanium += loadedfighters * 3;
+            result.supplies += loadedfighters * 5;
+          }
+        }
+        //build
+        var builtfighters = 0;
+        if ((ship.friendlycode.toUpperCase() == "LFM") || ((race == 9 || race == 11) && ship.mission == 8) || race == 10) {
+          builtfighters = Math.min(Math.floor((ship.molybdenum + result.molybdenum) / 2),
+            Math.floor((ship.tritanium + result.tritanium) / 3),
+            Math.floor((ship.supplies + result.supplies) / 5));
+          if (builtfighters > 0) {
+            result.molybdenum -= builtfighters * 2;
+            result.tritanium -= builtfighters * 3;
+            result.supplies -= builtfighters * 5;
+            result.ammo += builtfighters;
+          }
+        }
+      }
+    }
+
+
+
+
 
 
     function shipCanReachPlanet(ship) {
@@ -612,7 +677,7 @@ function wrapper() { // wrapper for injection
         }
         // ship is cloned and over hit planet
         if (vgap.myships[i].x == hit.x && vgap.myships[i].y == hit.y && vgap.myships[i].friendlycode.toLowerCase() == "cln") {
-             result.push(vgap.myships[i]);
+          result.push(vgap.myships[i]);
         }
       }
       return result;
@@ -790,7 +855,7 @@ function wrapper() { // wrapper for injection
 
     // register your plugin with NU
     vgap.registerPlugin(plugin, "Predict");
-    console.log( "Predict Plugin registered!");
+    console.log("Predict Plugin registered!");
 
   }
 
